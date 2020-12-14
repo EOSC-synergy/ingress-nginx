@@ -68,6 +68,10 @@ RUN apk add --no-cache libcap \
   && setcap -v cap_net_bind_service=+ep /usr/local/nginx/sbin/nginx \
   && apk del libcap
 
+# Custom packages
+RUN apk add --no-cache nginx-mod-http-js
+RUN ln -sf /usr/lib/nginx/modules/ngx_http_js_module.so /etc/nginx/modules/ngx_http_js_module.so
+
 USER www-data
 
 # Create symlinks to redirect nginx logs to stdout and stderr docker log collector
