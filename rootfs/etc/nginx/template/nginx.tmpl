@@ -576,6 +576,9 @@ http {
     ## end server {{ $redirect.From }}
     {{ end }}
 
+    # [SQAaaS] Include oauth2.js (https://gist.github.com/lcrilly/c26baed7d80e84c879439d4f0fefb18a/raw/696fa7442bdd000634a8be595079900552a1b0d9/oauth2.js)
+    js_include oauth2.js;
+
     {{ range $server := $servers }}
 
     ## start server {{ $server.Hostname }}
