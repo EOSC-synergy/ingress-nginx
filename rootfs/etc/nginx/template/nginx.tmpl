@@ -1386,9 +1386,7 @@ stream {
 
         {{ end }}
 
-        # [SQAaaS] OAuth2 Token Introspection main configuration and locations
+        # [SQAaaS] OAuth2 Token Introspection main settings
         include /etc/nginx/oauth2_token_introspection/vars/main.conf;
-        include /etc/nginx/oauth2_token_introspection/location.conf;
-        include /etc/nginx/oauth2_token_introspection/location_send_request.conf;
 
 {{ end }}
