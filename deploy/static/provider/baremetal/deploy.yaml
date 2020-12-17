@@ -330,7 +330,8 @@ spec:
       containers:
         - name: controller
           image: k8s.gcr.io/ingress-nginx/controller:v0.41.2@sha256:1f4f402b9c14f3ae92b11ada1dfe9893a88f0faeb0b2f4b903e2c67a0c3bf0de
-          imagePullPolicy: IfNotPresent
+          image: eoscsynergy/controller:controller-v0.41.2
+          imagePullPolicy: Always
           lifecycle:
             preStop:
               exec:
@@ -397,10 +398,51 @@ spec:
             - name: webhook-cert
               mountPath: /usr/local/certificates/
               readOnly: true
+            - name: oauth-vars 
+              mountPath: /etc/nginx/oauth2_token_introspection/vars
+              readOnly: true
           resources:
             requests:
               cpu: 100m
               memory: 90Mi
+      initContainers:
+      - command:
+        - sh
+        - -c
+        - envsubst '${OAUTH_TOKEN_ENDPOINT} ${OAUTH_TOKEN_HINT} ${OAUTH_CLIENT_ID}
+          ${OAUTH_CLIENT_SECRET}' < /wd/main.conf > /etc/nginx/oauth2_token_introspection/vars/main.conf
+        env:
+        - name: OAUTH_TOKEN_ENDPOINT
+          valueFrom:
+            secretKeyRef:
+              key: token_endpoint
+              name: oauth2-secret
+        - name: OAUTH_TOKEN_HINT
+          valueFrom:
+            secretKeyRef:
+              key: token_hint
+              name: oauth2-secret
+        - name: OAUTH_CLIENT_ID
+          valueFrom:
+            secretKeyRef:
+              key: client_id
+              name: oauth2-secret
+        - name: OAUTH_CLIENT_SECRET
+          valueFrom:
+            secretKeyRef:
+              key: client_secret
+              name: oauth2-secret
+        image: bhgedigital/envsubst
+        imagePullPolicy: Always
+        name: envsubst-secrets
+        resources: {}
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+        volumeMounts:
+        - mountPath: /wd
+          name: workdir
+        - mountPath: /etc/nginx/oauth2_token_introspection/vars
+          name: oauth-vars
       nodeSelector:
         kubernetes.io/os: linux
       serviceAccountName: ingress-nginx
@@ -409,6 +451,14 @@ spec:
         - name: webhook-cert
           secret:
             secretName: ingress-nginx-admission
+        - name: oauth-vars
+          emptyDir: {}
+        - name: workdir
+          configMap:
+            items:
+            - key: main.conf
+              path: main.conf
+            name: nginx-oauth-configuration
 ---
 # Source: ingress-nginx/templates/admission-webhooks/validating-webhook.yaml
 # before changing this value, check the required kubernetes version
